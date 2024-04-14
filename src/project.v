@@ -47,7 +47,7 @@ module tt_um_averkhov_pong (
   wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_paddle ? -1 : ( ball_at_top_paddle ? 1 : ball_velocity_y ) ) );
   wire [7:0] next_position_left_paddle = left_paddle_command == 0 ? left_paddle_position_y - 1 : ( left_paddle_command == 1 ? left_paddle_position_y + 1 : left_paddle_position_y );
   wire [7:0] next_position_right_paddle = right_paddle_command == 0 ? right_paddle_position_y - 1 : ( right_paddle_command == 1 ? right_paddle_position_y + 1 : right_paddle_position_y );
-  wire [7:0] next_output: output_select == 0 ? ball_position_x : ( output_select == 1 ? ball_position_y : ( output_select == 2 ? left_paddle_position_y : right_paddle_position_y ) );
+  wire [7:0] next_output = output_select == 0 ? ball_position_x : ( output_select == 1 ? ball_position_y : ( output_select == 2 ? left_paddle_position_y : right_paddle_position_y ) );
 
   always @(posedge clk2) begin
     ball_velocity_x <= next_ball_velocity_x;
