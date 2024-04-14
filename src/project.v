@@ -19,7 +19,6 @@ module tt_um_averkhov_pong (
   parameter [7:0] SCREEN_WIDTH = 200;
   parameter [7:0] SCREEN_HEIGHT = 187;
 
-
   // Not using uio_out.
   assign uio_out = 0;
   assign uio_oe  = 0;
@@ -48,12 +47,12 @@ module tt_um_averkhov_pong (
   wire ball_at_top_edge = ball_position_y == 0 ? 1 : 0;
   wire ball_at_bottom_edge = ball_position_y == SCREEN_HEIGHT - 1 ? 1 : 0;
   wire ball_at_left_paddle = (ball_at_left_paddle_column == 1) & (ball_position_y - left_paddle_position_y <= PADDLE_EXTENT || left_paddle_position_y - ball_position_y <= PADDLE_EXTENT) ? 1 : 0;
-  wire ball_at_right_paddle = (ball_at_right_paddle_column == 1) & (ball_position_y - right_paddle_position_y <= PADDLE_EXTENT || right_paddle_position_y - ball_position_y <= PADDLE_EXTENT) <= PADDLE_EXTENT ? 1 : 0;
+  wire ball_at_right_paddle = (ball_at_right_paddle_column == 1) & (ball_position_y - right_paddle_position_y <= PADDLE_EXTENT || right_paddle_position_y - ball_position_y <= PADDLE_EXTENT) ? 1 : 0;
 
-  wire [7:0] next_ball_velocity_x = reset ? 1 : (ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle ? -1 : ( ball_at_left_paddle ? 1 : ball_velocity_x ) ) );
+  wire [7:0] next_ball_velocity_x = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle ? -1 : ( ball_at_left_paddle ? 1 : ball_velocity_x ) ) );
   wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_edge ? -1 : ( ball_at_top_edge ? 1 : ball_velocity_y ) ) );
-  wire [7:0] next_position_left_paddle = left_paddle_command == 0 ? left_paddle_position_y - 1 : ( left_paddle_command == 1 ? left_paddle_position_y + 1 : left_paddle_position_y );
-  wire [7:0] next_position_right_paddle = right_paddle_command == 0 ? right_paddle_position_y - 1 : ( right_paddle_command == 1 ? right_paddle_position_y + 1 : right_paddle_position_y );
+  wire [7:0] next_position_left_paddle = left_paddle_command == 0 ? left_paddle_position_y - 1 : left_paddle_position_y + 1;
+  wire [7:0] next_position_right_paddle = right_paddle_command == 0 ? right_paddle_position_y - 1 : right_paddle_position_y + 1;
   wire [7:0] next_output = output_select == 0 ? ball_position_x : ( output_select == 1 ? ball_position_y : ( output_select == 2 ? left_paddle_position_y : right_paddle_position_y ) );
 
   always @(posedge clk2) begin
