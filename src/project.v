@@ -15,6 +15,9 @@ module tt_um_averkhov_pong (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
+  parameter int PADDLE_EXTENT = 5;
+  parameter int SCREEN_WIDTH = 200;
+  parameter int SCREEN_HEIGHT = 187;
 
   // Not using uio_out.
   assign uio_out = 0;
@@ -37,12 +40,12 @@ module tt_um_averkhov_pong (
   wire [7:0] next_ball_position_y = reset == 1 ? 3 : ball_position_y + ball_velocity_y;
   wire ball_at_left_paddle_x = ball_position_x == 1 ? 1 : 0;
   wire ball_at_left_edge = ball_position_x == 0 ? 1 : 0;
-  wire ball_at_right_paddle_x = ball_position_x == screen_width - 2 ? 1 : 0;
-  wire ball_at_right_edge = ball_position_x == screen_width - 1 ? 1 : 0;
+  wire ball_at_right_paddle_x = ball_position_x == SCREEN_WIDTH - 2 ? 1 : 0;
+  wire ball_at_right_edge = ball_position_x == SCREEN_WIDTH - 1 ? 1 : 0;
   wire ball_at_top_edge = ball_position_y == 0 ? 1 : 0;
-  wire ball_at_bottom_edge = ball_position_y == screen_height - 1 ? 1 : 0;
-  wire ball_at_left_paddle = (ball_at_left_edge == 1) & (ball_position_y - left_paddle_position_y <= paddle_extent || left_paddle_position_y - ball_position_y <= paddle_extent) ? 1 : 0;
-  wire ball_at_right_paddle = (ball_at_right_edge == 1) & (ball_position_y - right_paddle_position_y <= paddle_extent || right_paddle_position_y - ball_position_y <= paddle_extent) <= paddle_extent ? 1 : 0;
+  wire ball_at_bottom_edge = ball_position_y == SCREEN_HEIGHT - 1 ? 1 : 0;
+  wire ball_at_left_paddle = (ball_at_left_edge == 1) & (ball_position_y - left_paddle_position_y <= PADDLE_EXTENT || left_paddle_position_y - ball_position_y <= PADDLE_EXTENT) ? 1 : 0;
+  wire ball_at_right_paddle = (ball_at_right_edge == 1) & (ball_position_y - right_paddle_position_y <= PADDLE_EXTENT || right_paddle_position_y - ball_position_y <= PADDLE_EXTENT) <= PADDLE_EXTENT ? 1 : 0;
 
   wire [7:0] next_ball_velocity_x = reset ? 1 : (ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle_x ? -1 : ( ball_at_left_paddle_x ? 1 : ball_velocity_x ) ) );
   wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_edge ? -1 : ( ball_at_top_edge ? 1 : ball_velocity_y ) ) );
