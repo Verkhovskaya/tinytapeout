@@ -38,16 +38,16 @@ module tt_um_averkhov_pong (
 
   wire [7:0] next_ball_position_x = reset == 0 ? 3 : ball_position_x + ball_velocity_x;
   wire [7:0] next_ball_position_y = reset == 1 ? 3 : ball_position_y + ball_velocity_y;
-  wire ball_at_left_paddle_x = ball_position_x == 1 ? 1 : 0;
+  wire ball_at_left_paddle_column = ball_position_x == 1 ? 1 : 0;
   wire ball_at_left_edge = ball_position_x == 0 ? 1 : 0;
-  wire ball_at_right_paddle_x = ball_position_x == SCREEN_WIDTH - 2 ? 1 : 0;
+  wire ball_at_right_paddle_column = ball_position_x == SCREEN_WIDTH - 2 ? 1 : 0;
   wire ball_at_right_edge = ball_position_x == SCREEN_WIDTH - 1 ? 1 : 0;
   wire ball_at_top_edge = ball_position_y == 0 ? 1 : 0;
   wire ball_at_bottom_edge = ball_position_y == SCREEN_HEIGHT - 1 ? 1 : 0;
-  wire ball_at_left_paddle = (ball_at_left_edge == 1) & (ball_position_y - left_paddle_position_y <= PADDLE_EXTENT || left_paddle_position_y - ball_position_y <= PADDLE_EXTENT) ? 1 : 0;
-  wire ball_at_right_paddle = (ball_at_right_edge == 1) & (ball_position_y - right_paddle_position_y <= PADDLE_EXTENT || right_paddle_position_y - ball_position_y <= PADDLE_EXTENT) <= PADDLE_EXTENT ? 1 : 0;
+  wire ball_at_left_paddle = (ball_at_left_paddle_column == 1) & (ball_position_y - left_paddle_position_y <= PADDLE_EXTENT || left_paddle_position_y - ball_position_y <= PADDLE_EXTENT) ? 1 : 0;
+  wire ball_at_right_paddle = (ball_at_right_paddle_column == 1) & (ball_position_y - right_paddle_position_y <= PADDLE_EXTENT || right_paddle_position_y - ball_position_y <= PADDLE_EXTENT) <= PADDLE_EXTENT ? 1 : 0;
 
-  wire [7:0] next_ball_velocity_x = reset ? 1 : (ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle_x ? -1 : ( ball_at_left_paddle_x ? 1 : ball_velocity_x ) ) );
+  wire [7:0] next_ball_velocity_x = reset ? 1 : (ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle ? -1 : ( ball_at_left_paddle ? 1 : ball_velocity_x ) ) );
   wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_edge ? -1 : ( ball_at_top_edge ? 1 : ball_velocity_y ) ) );
   wire [7:0] next_position_left_paddle = left_paddle_command == 0 ? left_paddle_position_y - 1 : ( left_paddle_command == 1 ? left_paddle_position_y + 1 : left_paddle_position_y );
   wire [7:0] next_position_right_paddle = right_paddle_command == 0 ? right_paddle_position_y - 1 : ( right_paddle_command == 1 ? right_paddle_position_y + 1 : right_paddle_position_y );
@@ -58,6 +58,8 @@ module tt_um_averkhov_pong (
     ball_velocity_y <= next_ball_velocity_y;
     ball_position_x <= next_ball_position_x;
     ball_position_y <= next_ball_position_y;
+    left_paddle_position_y <= next_position_left_paddle;
+    right_paddle_position_y <= next_position_right_paddle;
     uo_out <= next_output;
   end
 
