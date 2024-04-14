@@ -40,8 +40,8 @@ module tt_um_averkhov_pong (
   wire ball_at_right_paddle_x = ball_position_x == screen_width - 2 ? 1 : 0;
   wire ball_at_top_edge = ball_position_y == 0 ? 1 : 0;
   wire ball_at_bottom_edge = ball_position_y == screen_height - 1 ? 1 : 0;
-  wire ball_at_left_paddle = (ball_at_left_edge == 1) & abs(ball_position_y - left_paddle_position_y) <= paddle_extent ? 1 : 0;
-  wire ball_at_right_paddle = (ball_at_right_edge == 1) & abs(ball_position_y - right_paddle_position_y) <= paddle_extent ? 1 : 0;
+  wire ball_at_left_paddle = (ball_at_left_edge == 1) & (ball_position_y - left_paddle_position_y <= paddle_extent || left_paddle_position_y - ball_position_y <= paddle_extent) ? 1 : 0;
+  wire ball_at_right_paddle = (ball_at_right_edge == 1) & (ball_position_y - right_paddle_position_y <= paddle_extent || right_paddle_position_y - ball_position_y <= paddle_extent) <= paddle_extent ? 1 : 0;
 
   wire [7:0] next_ball_velocity_x = reset ? 1 : (ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle ? -1 : ( ball_at_left_paddle ? 1 : ball_velocity_x ) ) );
   wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_paddle ? -1 : ( ball_at_top_paddle ? 1 : ball_velocity_y ) ) );
