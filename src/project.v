@@ -15,13 +15,16 @@ module tt_um_averkhov_pong (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
-  parameter int PADDLE_EXTENT = 5;
-  parameter int SCREEN_WIDTH = 200;
-  parameter int SCREEN_HEIGHT = 187;
+  parameter [7:0] PADDLE_EXTENT = 5;
+  parameter [7:0] SCREEN_WIDTH = 200;
+  parameter [7:0] SCREEN_HEIGHT = 187;
+
 
   // Not using uio_out.
   assign uio_out = 0;
   assign uio_oe  = 0;
+  reg [7:0] output_write;
+  oui_out = output_write;
 
   reg [7:0] ball_position_x;
   reg [7:0] ball_position_y;
@@ -60,7 +63,7 @@ module tt_um_averkhov_pong (
     ball_position_y <= next_ball_position_y;
     left_paddle_position_y <= next_position_left_paddle;
     right_paddle_position_y <= next_position_right_paddle;
-    uo_out <= next_output;
+    output_write <= next_output;
   end
 
 endmodule
