@@ -26,12 +26,11 @@ module tt_um_averkhov_pong (
   reg [7:0] right_paddle_position_y;
   reg [7:0] output_reg;
 
-  assign uo_out <= output_reg;
-
   wire left_paddle_command = ui_in[0];
   wire right_paddle_command = ui_in[1];
   wire reset = ui_in[2];
-  wire [1:0] output_select = ui_in[3:4]; // (left paddle, right_paddle, ball_x, ball_y)
+  wire [1:0] output_select = ui_in[4:3]; // (left paddle, right_paddle, ball_x, ball_y)
+  wire clk2 = ui_in[5];
 
   wire [7:0] next_ball_position_x = reset == 0 ? 3 : ball_position_x + ball_velocity_x;
   wire [7:0] next_ball_position_y = reset == 1 ? 3 : ball_position_y + ball_velocity_y;
@@ -55,7 +54,7 @@ module tt_um_averkhov_pong (
     ball_velocity_y <= next_ball_velocity_y;
     ball_position_x <= next_ball_position_x;
     ball_position_y <= next_ball_position_y;
-    output_reg <= next_output;
+    uo_out <= next_output;
   end
 
 endmodule
