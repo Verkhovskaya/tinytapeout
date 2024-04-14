@@ -19,11 +19,10 @@ module tt_um_averkhov_pong (
   parameter [7:0] SCREEN_WIDTH = 200;
   parameter [7:0] SCREEN_HEIGHT = 187;
 
-  // Not using uio_out.
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  assign uio_oe  = 0xff;
   reg [7:0] output_write;
-  assign uo_out = output_write;
+  assign uo_out = output_write_1;
+  assign uio_out = output_write_2;
 
   reg [7:0] ball_position_x;
   reg [7:0] ball_position_y;
@@ -35,8 +34,8 @@ module tt_um_averkhov_pong (
   wire left_paddle_command = ui_in[0];
   wire right_paddle_command = ui_in[1];
   wire reset = ui_in[2];
-  wire [1:0] output_select = ui_in[4:3]; // (left paddle, right_paddle, ball_x, ball_y)
-  wire clk2 = ui_in[5];
+  wire output_select = ui_in[3];
+  wire clk2 = ui_in[4];
 
   wire [7:0] next_ball_position_x = reset == 0 ? 3 : ball_position_x + ball_velocity_x;
   wire [7:0] next_ball_position_y = reset == 1 ? 3 : ball_position_y + ball_velocity_y;
@@ -53,7 +52,8 @@ module tt_um_averkhov_pong (
   wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_edge ? -1 : ( ball_at_top_edge ? 1 : ball_velocity_y ) ) );
   wire [7:0] next_position_left_paddle = left_paddle_command == 0 ? left_paddle_position_y - 1 : left_paddle_position_y + 1;
   wire [7:0] next_position_right_paddle = right_paddle_command == 0 ? right_paddle_position_y - 1 : right_paddle_position_y + 1;
-  wire [7:0] next_output = output_select == 0 ? ball_position_x : ( output_select == 1 ? ball_position_y : ( output_select == 2 ? left_paddle_position_y : right_paddle_position_y ) );
+  wire [7:0] next_output_1 = output_select == 0 ? ball_position_x : ball_position_y;
+  wire [7:0] next_output_2 = output_select == 0 ? left_paddle_position_y : right_paddle_position_y;
 
   always @(posedge clk2) begin
     ball_velocity_x <= next_ball_velocity_x;
@@ -62,7 +62,8 @@ module tt_um_averkhov_pong (
     ball_position_y <= next_ball_position_y;
     left_paddle_position_y <= next_position_left_paddle;
     right_paddle_position_y <= next_position_right_paddle;
-    output_write <= next_output;
+    output_write_1 <= next_output_1;
+    output_write_2 <= next_output_2;
   end
 
 endmodule
