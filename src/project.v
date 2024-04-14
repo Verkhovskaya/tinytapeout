@@ -5,7 +5,7 @@
 
 `define default_netname none
 
-module tt_um_cchan_fp8_multiplier (
+module tt_um_averkhov_pong (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -15,88 +15,47 @@ module tt_um_cchan_fp8_multiplier (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
-    // Not using uio_out.
-    assign uio_out = 0;
-    assign uio_oe  = 0;
 
-    // TODO: Now that we can have two 8-bit inputs and a separate clock, we can simplify this module a lot.
+  // Not using uio_out.
+  assign uio_out = 0;
+  assign uio_oe  = 0;
 
-    wire clk2 = ui_in[0];
-    wire [2:0] ctrl = ui_in[3:1];
-    wire [3:0] data = ui_in[7:4];
-    // wire [6:0] led_out;
-    // assign io_out[6:0] = led_out;
-    // wire [5:0] seed_input = io_in[7:2];
+  register [7:0] ball_position_x;
+  register [7:0] ball_position_y;
+  register [7:0] left_paddle_position_y;
+  register [7:0] right_paddle_position_y;
+  register [7:0] output;
 
-    reg [8:0] operand1;
-    reg [8:0] operand2;
-    // For now we're commenting this out and leaving the results unbuffered.
-    // reg [8:0] result_out;
-    // assign io_out = result_out;
+  assign uo_out <= output;
 
-    always @(posedge clk2) begin
-        if (!ctrl[0]) begin  // if first CTRL bit is off, we're in STORE mode
-            if (!ctrl[1]) begin  // second CTRL bit controls whether it's the first or second operand
-                if (!ctrl[2]) begin  // third CTRL bit controls whether it's the upper or lower half
-                    operand1[3:0] <= data;
-                end else begin
-                    operand1[7:4] <= data;
-                end
-            end else begin
-                if (!ctrl[2]) begin
-                    operand2[3:0] <= data;
-                end else begin
-                    operand2[7:4] <= data;
-                end
-            end
-        end else begin  // if first CTRL bit is on, this is reserved.
-            // TODO
-            // if (!ctrl[1] && !ctrl[2]) begin
-            //     result_out[7:0] <= 0;
-            // end
-        end
-    end
+  wire left_paddle_command = ui_in[0];
+  wire right_paddle_command = ui_in[1];
+  wire reset = ui_in[2];
+  wire [1:0] output_select = ui_in[3:4]; // (left paddle, right_paddle, ball_x, ball_y)
 
-    // Compute result_out in terms of operand1, operand2
-    fp8mul mul1(
-        .sign1(operand1[7]),
-        .exp1(operand1[6:3]),
-        .mant1(operand1[2:0]),
-        .sign2(operand2[7]),
-        .exp2(operand2[6:3]),
-        .mant2(operand2[2:0]),
-        .sign_out(uo_out[7]),
-        .exp_out(uo_out[6:3]),
-        .mant_out(uo_out[2:0])
-    );
-endmodule
+  wire [7:0] next_ball_position_x = reset == 0 ? 3 : ball_position_x + ball_velocity_x;
+  wire [7:0] next_ball_position_y = reset == 1 ? 3 : ball_position_y + ball_velocity_y;
+  wire ball_at_left_paddle_x = ball_position_x == 1 ? 1 : 0;
+  wire ball_at_left_edge = ball_position_x == 0 ? 1 : 0;
+  wire ball_at_right_edge = ball_position_x == screen_width - 1 ? 1 : 0;
+  wire ball_at_right_paddle_x = ball_position_x == screen_width - 2 ? 1 : 0;
+  wire ball_at_top_edge = ball_position_y == 0 ? 1 : 0;
+  wire ball_at_bottom_edge = ball_position_y == screen_height - 1 ? 1 : 0;
+  wire ball_at_left_paddle = (ball_at_left_edge == 1) && abs(ball_position_y - left_paddle_position_y) <= paddle_extent ? 1 : 0;
+  wire ball_at_right_paddle = (ball_at_right_edge == 1) && abs(ball_position_y - right_paddle_position_y) <= paddle_extent ? 1 : 0;
 
-module fp8mul (
-  input sign1,
-  input [3:0] exp1,
-  input [2:0] mant1,
+  wire [7:0] next_ball_velocity_x = reset ? 1 : (ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_right_paddle ? -1 : ( ball_at_left_paddle ? 1 : ball_velocity_x ) ) )
+  wire [7:0] next_ball_velocity_y = reset ? 1 : ( ball_at_left_edge || ball_at_right_edge ? 0 : ( ball_at_bottom_paddle ? -1 : ( ball_at_top_paddle ? 1 : ball_velocity_y ) ) )
+  wire [7:0] next_position_left_paddle = left_paddle_up_command ? left_paddle_position_y - 1 : ( left_paddle_down_command ? left_paddle_position_y + 1 : left_paddle_position_y )
+  wire [7:0] next_position_right_paddle = right_paddle_up_command ? right_paddle_position_x - 1 : ( right_paddle_down_command ? right_paddle_position_x + 1 : right_paddle_position_x )
+  wire [7:0] next_output: output_select == 0 ? ball_position_x : ( output_select == 1 ? ball_position_y : ( output_select == 2 ? left_paddle_position : right_paddle_position ) )
 
-  input sign2,
-  input [3:0] exp2,
-  input [2:0] mant2,
+  always @(posedge clk2) begin
+    ball_velocity_x <= next_ball_velocity_x;
+    ball_velocity_y <= next_ball_velocity_y;
+    ball_position_x <= next_ball_position_x;
+    ball_position_y <= next_ball_position_y;
+    output <= next_output;
+  end
 
-  output sign_out,
-  output [3:0] exp_out,
-  output [2:0] mant_out
-);
-    parameter EXP_BIAS = 7;
-    wire isnan = (sign1 == 1 && exp1 == 0 && mant1 == 0) || (sign2 == 1 && exp2 == 0 && mant2 == 0);
-    wire [7:0] full_mant = ({exp1 != 0, mant1} * {exp2 != 0, mant2});
-    wire overflow_mant = full_mant[7];
-    wire [6:0] shifted_mant = overflow_mant ? full_mant[6:0] : {full_mant[5:0], 1'b0};
-    // is the mantissa overflowing up to the next exponent?
-    wire roundup = (exp1 + exp2 + overflow_mant < 1 + EXP_BIAS) && (shifted_mant[6:0] != 0)
-                   || (shifted_mant[6:4] == 3'b111 && shifted_mant[3]);
-    wire underflow = (exp1 + exp2 + overflow_mant) < 1 - roundup + EXP_BIAS;
-    wire is_zero = exp1 == 0 || exp2 == 0 || isnan || underflow;
-    // note: you can't use negative numbers reliably. just keep things positive during compares.
-    wire [4:0] exp_out_tmp = (exp1 + exp2 + overflow_mant + roundup) < EXP_BIAS ? 0 : (exp1 + exp2 + overflow_mant + roundup - EXP_BIAS);
-    assign exp_out = exp_out_tmp > 15 ? 4'b1111 : (is_zero) ? 0 : exp_out_tmp[3:0];  // Exponent bias is 7
-    assign mant_out = exp_out_tmp > 15 ? 3'b111 : (is_zero || roundup) ? 0 : (shifted_mant[6:4] + (shifted_mant[3:0] > 8 || (shifted_mant[3:0] == 8 && shifted_mant[4])));
-    assign sign_out = ((sign1 ^ sign2) && !(is_zero)) || isnan;
 endmodule
