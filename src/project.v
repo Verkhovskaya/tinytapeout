@@ -24,7 +24,7 @@ module tt_um_averkhov_pong (
   assign uio_out = 0;
   assign uio_oe  = 0;
   reg [7:0] output_write;
-  assign oui_out = output_write;
+  assign uo_out = output_write;
 
   reg [7:0] ball_position_x;
   reg [7:0] ball_position_y;
