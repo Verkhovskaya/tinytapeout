@@ -20,11 +20,11 @@ module tt_um_averkhov_pong (
   assign uio_out = 0;
   assign uio_oe  = 0;
 
-  register [7:0] ball_position_x;
-  register [7:0] ball_position_y;
-  register [7:0] left_paddle_position_y;
-  register [7:0] right_paddle_position_y;
-  register [7:0] output_reg;
+  reg [7:0] ball_position_x;
+  reg [7:0] ball_position_y;
+  reg [7:0] left_paddle_position_y;
+  reg [7:0] right_paddle_position_y;
+  reg [7:0] output_reg;
 
   assign uo_out <= output_reg;
 
